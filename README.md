@@ -121,7 +121,3 @@ La API REST proporciona los siguientes endpoints:
 2. **Escalabilidad Horizontal**: Desplegar múltiples instancias de consumidores para manejar mayor carga
 3. **Procesamiento Avanzado**: Implementar análisis de datos y predicciones meteorológicas
 4. **Notificaciones Multicanal**: Extender el sistema de alertas para enviar notificaciones por email, SMS, etc.
-
-## Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
