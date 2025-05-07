@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # RabbitMQ service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: weather-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management interface port
+    environment:
+      - RABBITMQ_DEFAULT_USER=weather_user
+      - RABBITMQ_DEFAULT_PASS=weather_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - weather_network
+
+  # PostgreSQL service
+  postgres:
+    image: postgres:16
+    container_name: weather-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASSWORD=weather_password
+      - POSTGRES_DB=weather_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weather_user -d weather_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - weather_network
+
+  # Weather data producer
+  producer:
+    build:
+      context: ./producers
+    container_name: weather-producer
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=weather_user
+      - RABBITMQ_PASS=weather_password
+      - SIMULATION_INTERVAL=5  # Seconds between simulated readings
+      - NUM_STATIONS=5         # Number of stations to simulate
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+    networks:
+      - weather_network
+
+  # Weather data consumer
+  consumer:
+    build:
+      context: ./consumers
+    container_name: weather-consumer
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=weather_user
+      - RABBITMQ_PASS=weather_password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASS=weather_password
+      - POSTGRES_DB=weather_db
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: always
+    networks:
+      - weather_network
+
+  # Alert service
+  alert-service:
+    build:
+      context: ./alert-service
+    container_name: weather-alert-service
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASS=weather_password
+      - POSTGRES_DB=weather_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=weather_user
+      - RABBITMQ_PASS=weather_password
+      - CHECK_INTERVAL=10  # Seconds between alert checks
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+    networks:
+      - weather_network
+
+  # API service
+  api-service:
+    build:
+      context: ./api-service
+    container_name: weather-api-service
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASS=weather_password
+      - POSTGRES_DB=weather_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    networks:
+      - weather_network
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus
+    container_name: weather-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: always
+    networks:
+      - weather_network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana
+    container_name: weather-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana-datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    restart: always
+    networks:
+      - weather_network
+
+volumes:
+  rabbitmq_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  weather_network:
+    driver: bridge
