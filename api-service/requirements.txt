@@ -1,0 +1,6 @@
+fastapi==0.115.12
+uvicorn==0.34.2
+psycopg2-binary==2.9.10
+prometheus-client==0.21.1
+python-dotenv==1.1.0
+pydantic==2.11.4
