@@ -2,9 +2,9 @@
 
 Este proyecto implementa un sistema completo para la gestión de logs de estaciones meteorológicas, utilizando una arquitectura de microservicios con principios SOLID/GRASP y patrones de diseño.
 
-Realizado por los estudiantes:
-Isabella Sofía Arrieta Guardo
-José Fernando González Ortiz
+Realizado por los estudiantes:\
+Isabella Sofía Arrieta Guardo \
+José Fernando González Ortiz  
 Eduardo Alejandro Negrín Perez
 
 ## Arquitectura del Sistema
