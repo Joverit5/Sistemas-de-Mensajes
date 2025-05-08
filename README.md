@@ -87,20 +87,20 @@ El sistema está diseñado siguiendo una arquitectura de microservicios, donde c
 ## Instalación y Ejecución
 
 1. Clonar el repositorio:
-   \`\`\`
+   ```python
    git clone https://github.com/usuario/weather-station-logs.git
    cd weather-station-logs
-   \`\`\`
+   ```
 
 2. Iniciar los servicios con Docker Compose:
-   \`\`\`
+   ```python
    docker-compose up -d
-   \`\`\`
+   ```
 
 3. Verificar que todos los servicios estén funcionando:
-   \`\`\`
+   ```python
    docker-compose ps
-   \`\`\`
+   ```
 
 ## Acceso a los Servicios
 
@@ -153,9 +153,9 @@ Para personalizar las alertas según sus necesidades:
 
 1. Edite el archivo `monitoring/alerts.yml` para modificar umbrales o añadir nuevas reglas
 2. Reinicie Prometheus para aplicar los cambios:
-   \`\`\`
+   ```python
    docker-compose restart prometheus
-   \`\`\`
+   ```
 
 3. Verifique las alertas en la interfaz de Prometheus: http://localhost:9090/alerts
 
