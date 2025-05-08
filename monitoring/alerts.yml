@@ -1,0 +1,185 @@
+groups:
+  - name: weather_conditions_alerts
+    rules:
+      # Alertas de condiciones meteorológicas
+      - alert: HighTemperature
+        expr: weather_station_temperature > 35
+        for: 5m
+        labels:
+          severity: warning
+          category: weather
+        annotations:
+          summary: "Alta temperatura detectada"
+          description: "La estación {{ $labels.station_id }} reporta temperatura de {{ $value | printf \"%.1f\" }}°C durante más de 5 minutos"
+          
+      - alert: ExtremeTemperature
+        expr: weather_station_temperature > 40
+        for: 2m
+        labels:
+          severity: critical
+          category: weather
+        annotations:
+          summary: "Temperatura extremadamente alta detectada"
+          description: "¡ALERTA CRÍTICA! La estación {{ $labels.station_id }} reporta temperatura de {{ $value | printf \"%.1f\" }}°C"
+          
+      - alert: LowTemperature
+        expr: weather_station_temperature < -10
+        for: 5m
+        labels:
+          severity: warning
+          category: weather
+        annotations:
+          summary: "Baja temperatura detectada"
+          description: "La estación {{ $labels.station_id }} reporta temperatura de {{ $value | printf \"%.1f\" }}°C durante más de 5 minutos"
+          
+      - alert: HighHumidity
+        expr: weather_station_humidity > 90
+        for: 10m
+        labels:
+          severity: warning
+          category: weather
+        annotations:
+          summary: "Alta humedad detectada"
+          description: "La estación {{ $labels.station_id }} reporta humedad de {{ $value | printf \"%.1f\" }}% durante más de 10 minutos"
+          
+      - alert: StrongWind
+        expr: weather_station_wind_speed > 50
+        for: 5m
+        labels:
+          severity: warning
+          category: weather
+        annotations:
+          summary: "Viento fuerte detectado"
+          description: "La estación {{ $labels.station_id }} reporta velocidad del viento de {{ $value | printf \"%.1f\" }} km/h"
+          
+      - alert: HeavyPrecipitation
+        expr: weather_station_precipitation > 25
+        for: 15m
+        labels:
+          severity: warning
+          category: weather
+        annotations:
+          summary: "Precipitación intensa detectada"
+          description: "La estación {{ $labels.station_id }} reporta precipitación de {{ $value | printf \"%.1f\" }} mm durante más de 15 minutos"
+          
+  - name: station_status_alerts
+    rules:
+      # Alertas de estado de las estaciones
+      - alert: LowBattery
+        expr: weather_station_battery_level < 20
+        for: 30m
+        labels:
+          severity: warning
+          category: station
+        annotations:
+          summary: "Batería baja detectada"
+          description: "La estación {{ $labels.station_id }} reporta nivel de batería de {{ $value | printf \"%.1f\" }}%"
+          
+      - alert: CriticalBattery
+        expr: weather_station_battery_level < 10
+        for: 10m
+        labels:
+          severity: critical
+          category: station
+        annotations:
+          summary: "Nivel crítico de batería"
+          description: "¡ALERTA CRÍTICA! La estación {{ $labels.station_id }} reporta nivel de batería de {{ $value | printf \"%.1f\" }}%"
+          
+      - alert: StationNotReporting
+        expr: (time() - timestamp(weather_station_temperature)) > 900
+        for: 15m
+        labels:
+          severity: critical
+          category: station
+        annotations:
+          summary: "Estación sin reportar datos"
+          description: "La estación {{ $labels.station_id }} no ha reportado datos en los últimos 15 minutos"
+          
+  - name: system_alerts
+    rules:
+      # Alertas de sistema
+      - alert: HighMessageFailureRate
+        expr: rate(weather_consumer_messages_failed_total[5m]) / rate(weather_consumer_messages_processed_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "Alta tasa de fallos en mensajes"
+          description: "Más del 10% de los mensajes están fallando en el procesamiento"
+          
+      - alert: LargeQueueSize
+        expr: weather_consumer_queue_size > 50
+        for: 10m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "Cola de mensajes grande"
+          description: "La cola de mensajes tiene más de 50 mensajes pendientes durante más de 10 minutos"
+          
+      - alert: SlowMessageProcessing
+        expr: histogram_quantile(0.95, sum(rate(weather_consumer_processing_time_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "Procesamiento lento de mensajes"
+          description: "El 95% de los mensajes están tardando más de 1 segundo en procesarse"
+          
+  - name: service_alerts
+    rules:
+      # Alertas de servicios
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: service
+        annotations:
+          summary: "Servicio caído"
+          description: "El servicio {{ $labels.job }} está caído"
+          
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: service
+        annotations:
+          summary: "Alto uso de CPU"
+          description: "El servicio {{ $labels.job }} está utilizando más del 80% de CPU durante más de 5 minutos"
+          
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 500
+        for: 5m
+        labels:
+          severity: warning
+          category: service
+        annotations:
+          summary: "Alto uso de memoria"
+          description: "El servicio {{ $labels.job }} está utilizando más de 500MB de memoria"
+          
+  - name: database_alerts
+    rules:
+      # Alertas de base de datos
+      - alert: PostgresHighConnections
+        expr: pg_stat_activity_count > 50
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Alto número de conexiones a PostgreSQL"
+          description: "PostgreSQL tiene más de 50 conexiones activas durante más de 5 minutos"
+          
+      - alert: PostgresSlowQueries
+        expr: pg_stat_activity_max_tx_duration > 60
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Consultas lentas en PostgreSQL"
+          description: "PostgreSQL tiene consultas que llevan más de 60 segundos ejecutándose"

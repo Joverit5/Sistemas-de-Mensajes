@@ -2,6 +2,11 @@
 
 Este proyecto implementa un sistema completo para la gestión de logs de estaciones meteorológicas, utilizando una arquitectura de microservicios con principios SOLID/GRASP y patrones de diseño.
 
+Realizado por los estudiantes:
+Isabella Sofía Arrieta Guardo
+José Fernando González Ortiz
+Eduardo Alejandro Negrín Perez
+
 ## Arquitectura del Sistema
 
 El sistema está diseñado siguiendo una arquitectura de microservicios, donde cada componente tiene una responsabilidad única y bien definida:
@@ -12,7 +17,7 @@ El sistema está diseñado siguiendo una arquitectura de microservicios, donde c
 4. **Servicio de Alertas**: Microservicio que monitorea los datos y genera alertas basadas en umbrales configurables.
 5. **API REST**: Servicio que proporciona acceso a los datos históricos y alertas.
 6. **PostgreSQL**: Base de datos para almacenamiento persistente de los logs meteorológicos.
-7. **Monitoreo**: Sistema de logs y métricas con Prometheus y Grafana.
+7. **Monitoreo y Alertas**: Sistema completo con Prometheus, Alertmanager y Grafana para monitoreo, generación de alertas y visualización.
 
 ## Principios de Diseño Aplicados
 
@@ -82,18 +87,18 @@ El sistema está diseñado siguiendo una arquitectura de microservicios, donde c
 ## Instalación y Ejecución
 
 1. Clonar el repositorio:
-   \`\`\`bash
+   \`\`\`
    git clone https://github.com/usuario/weather-station-logs.git
    cd weather-station-logs
    \`\`\`
 
 2. Iniciar los servicios con Docker Compose:
-   \`\`\`bash
+   \`\`\`
    docker-compose up -d
    \`\`\`
 
 3. Verificar que todos los servicios estén funcionando:
-   \`\`\`bash
+   \`\`\`
    docker-compose ps
    \`\`\`
 
@@ -102,7 +107,57 @@ El sistema está diseñado siguiendo una arquitectura de microservicios, donde c
 - **RabbitMQ Management**: http://localhost:15672 (usuario: weather_user, contraseña: weather_password)
 - **API REST**: http://localhost:8000
 - **Prometheus**: http://localhost:9090
+- **Alertmanager**: http://localhost:9093
 - **Grafana**: http://localhost:3000 (usuario: admin, contraseña: admin)
+
+## Sistema de Monitoreo y Alertas
+
+El sistema incluye una configuración completa de monitoreo y alertas basada en Prometheus, Alertmanager y Grafana.
+
+### Alertas en Prometheus
+
+El sistema utiliza un archivo `alerts.yml` que define reglas de alertas para diferentes aspectos:
+
+- **Condiciones meteorológicas**: Alertas para temperaturas extremas, alta humedad, vientos fuertes, etc.
+- **Estado de las estaciones**: Alertas para batería baja, estaciones sin reportar, etc.
+- **Rendimiento del sistema**: Alertas para fallos en el procesamiento de mensajes, colas grandes, etc.
+- **Estado de los servicios**: Alertas para servicios caídos, alto uso de CPU/memoria, etc.
+- **Base de datos**: Alertas para problemas con PostgreSQL.
+
+### Gestión de Alertas con Alertmanager
+
+Alertmanager está configurado para gestionar las alertas generadas por Prometheus. La configuración actual:
+
+- Agrupa alertas relacionadas para evitar notificaciones duplicadas
+- Clasifica las alertas por categoría y severidad
+- No envía notificaciones por correo (configuración silenciosa)
+
+### Visualización en Grafana
+
+Se han implementado dos dashboards principales en Grafana:
+
+1. **Weather Station Dashboard**: Muestra métricas de las estaciones meteorológicas, como temperatura, humedad, presión, etc.
+
+2. **Panel de Alertas**: Dashboard especializado que muestra:
+   - Gráfico de alertas enviadas por severidad (`weather_alerts_notifications_sent_total`)
+   - Tabla de alertas activas
+   - Distribución de alertas por severidad
+   - Contador de alertas activas
+   - Evolución temporal de alertas por severidad
+
+## Configuración del Sistema de Alertas
+
+### Personalización de Alertas
+
+Para personalizar las alertas según sus necesidades:
+
+1. Edite el archivo `monitoring/alerts.yml` para modificar umbrales o añadir nuevas reglas
+2. Reinicie Prometheus para aplicar los cambios:
+   \`\`\`
+   docker-compose restart prometheus
+   \`\`\`
+
+3. Verifique las alertas en la interfaz de Prometheus: http://localhost:9090/alerts
 
 ## API REST
 
@@ -115,9 +170,24 @@ La API REST proporciona los siguientes endpoints:
 - `GET /alerts`: Obtiene alertas con filtros opcionales
 - `GET /alert-configurations`: Obtiene las configuraciones de alertas
 
+## Solución de Problemas
+
+### Visualización en Grafana
+
+Si los dashboards no muestran datos:
+
+1. Verifique que la fuente de datos de Prometheus está configurada correctamente en Grafana
+2. Asegúrese de que Prometheus está recopilando datos de todos los servicios
+3. Compruebe que las métricas utilizadas en los paneles existen en Prometheus
+
 ## Extensiones Posibles
 
-1. **Autenticación y Autorización**: Implementar JWT o OAuth2 para la API REST
-2. **Escalabilidad Horizontal**: Desplegar múltiples instancias de consumidores para manejar mayor carga
-3. **Procesamiento Avanzado**: Implementar análisis de datos y predicciones meteorológicas
-4. **Notificaciones Multicanal**: Extender el sistema de alertas para enviar notificaciones por email, SMS, etc.
+1. **Notificaciones de Alertas**: Configurar Alertmanager para enviar notificaciones por email, Slack, etc.
+2. **Autenticación y Autorización**: Implementar JWT o OAuth2 para la API REST
+3. **Escalabilidad Horizontal**: Desplegar múltiples instancias de consumidores para manejar mayor carga
+4. **Procesamiento Avanzado**: Implementar análisis de datos y predicciones meteorológicas
+5. **Dashboards Personalizados**: Crear paneles adicionales en Grafana para visualizaciones específicas
+
+## Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
