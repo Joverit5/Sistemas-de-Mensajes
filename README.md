@@ -88,8 +88,8 @@ El sistema está diseñado siguiendo una arquitectura de microservicios, donde c
 
 1. Clonar el repositorio:
    ```python
-   git clone https://github.com/usuario/weather-station-logs.git
-   cd weather-station-logs
+   git clone https://github.com/Joverit5/Sistemas-de-Mensajes.git
+   cd Sistemas-de-Mensajes
    ```
 
 2. Iniciar los servicios con Docker Compose:
