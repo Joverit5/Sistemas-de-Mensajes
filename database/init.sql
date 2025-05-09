@@ -105,19 +105,13 @@ CREATE OR REPLACE FUNCTION update_station_info()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Insert or update station information
-    INSERT INTO stations (id, latitude, longitude, elevation, status, updated_at)
+    INSERT INTO stations (id, status, updated_at)
     VALUES (
         NEW.station_id,
-        (NEW.metadata->>'latitude')::NUMERIC,
-        (NEW.metadata->>'longitude')::NUMERIC,
-        (NEW.metadata->>'elevation')::NUMERIC,
         NEW.status,
         NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
-        latitude = EXCLUDED.latitude,
-        longitude = EXCLUDED.longitude,
-        elevation = EXCLUDED.elevation,
         status = EXCLUDED.status,
         updated_at = NOW();
     
